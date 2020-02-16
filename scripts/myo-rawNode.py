@@ -117,56 +117,56 @@ class MyoRaw(object):
 
             self.start_raw()
 
-        # add data handlers
-        def handle_data(p):
-            if (p.cls, p.cmd) != (4, 5):
-                return
+    # add data handlers
+    def handle_data(p):
+        if (p.cls, p.cmd) != (4, 5):
+            return
 
-            c, attr, typ = unpack('BHB', p.payload[:4])
-            pay = p.payload[5:]
+        c, attr, typ = unpack('BHB', p.payload[:4])
+        pay = p.payload[5:]
 
-            if attr == 0x27:
-                vals = unpack('8HB', pay)
-                # not entirely sure what the last byte is,
-                # but it's a bitmask that seems to indicate which
-                # sensors think they're being moved around or something
-                emg = vals[:8]
-                moving = vals[8]
-                self.on_emg(emg, moving)
-            elif attr == 0x1c:
-                vals = unpack('10h', pay)
-                quat = vals[:4]
-                acc = vals[4:7]
-                gyro = vals[7:10]
-                self.on_imu(quat, acc, gyro)
-            elif attr == 0x23:
-                if len(pay) == 6:
-                    try:
-                        typ, val, xdir, _, _, _ = unpack('6B', pay)
-                    except Exception as e:
-                        print("Got exception: " + str(e) + "\nContinuing...")
-                        return
-                elif len(pay) == 3:
-                    try:
-                        typ, val, xdir = unpack('3B', pay)
-                    except Exception as e:
-                        print("Got exception: " + str(e) + "\nContinuing...")
-                        return
+        if attr == 0x27:
+            vals = unpack('8HB', pay)
+            # not entirely sure what the last byte is,
+            # but it's a bitmask that seems to indicate which
+            # sensors think they're being moved around or something
+            emg = vals[:8]
+            moving = vals[8]
+            self.on_emg(emg, moving)
+        elif attr == 0x1c:
+            vals = unpack('10h', pay)
+            quat = vals[:4]
+            acc = vals[4:7]
+            gyro = vals[7:10]
+            self.on_imu(quat, acc, gyro)
+        elif attr == 0x23:
+            if len(pay) == 6:
+                try:
+                    typ, val, xdir, _, _, _ = unpack('6B', pay)
+                except Exception as e:
+                    print("Got exception: " + str(e) + "\nContinuing...")
+                    return
+            elif len(pay) == 3:
+                try:
+                    typ, val, xdir = unpack('3B', pay)
+                except Exception as e:
+                    print("Got exception: " + str(e) + "\nContinuing...")
+                    return
 
-                if typ == 1:  # on arm
-                    self.on_arm(MyoArm(arm=val, xdir=xdir))
-                elif typ == 2:  # removed from arm
-                    self.on_arm(MyoArm(MyoArm.UNKNOWN, MyoArm.UNKNOWN))
-                elif typ == 3:  # pose
-                    if val == 255:
-                        pose = MyoPose(0)
-                    else:
-                        pose = MyoPose(val + 1)
-                    self.on_pose(pose)
-            else:
-                print('data with unknown attr: %02X %s' % (attr, p))
+            if typ == 1:  # on arm
+                self.on_arm(MyoArm(arm=val, xdir=xdir))
+            elif typ == 2:  # removed from arm
+                self.on_arm(MyoArm(MyoArm.UNKNOWN, MyoArm.UNKNOWN))
+            elif typ == 3:  # pose
+                if val == 255:
+                    pose = MyoPose(0)
+                else:
+                    pose = MyoPose(val + 1)
+                self.on_pose(pose)
+        else:
+            print('data with unknown attr: %02X %s' % (attr, p))
 
-        self.bt.add_handler(handle_data)
+    self.bt.add_handler(handle_data)
 
     def write_attr(self, attr, val):
         if self.conn is not None:
@@ -279,14 +279,14 @@ if __name__ == '__main__':
     rospy.init_node('myo_raw')
 
     # Define Publishers
-    imuPub = rospy.Publisher('~myo_imu', Imu, queue_size=1)
-    oriPub = rospy.Publisher('~myo_ori', Vector3, queue_size=1)
-    oriDegPub = rospy.Publisher('~myo_ori_deg', Vector3, queue_size=1)
-    emgPub = rospy.Publisher('~myo_emg', EmgArray, queue_size=1)
-    armPub = rospy.Publisher('~myo_arm', MyoArm, queue_size=1, latch=True)
-    gestPub = rospy.Publisher('~myo_gest', MyoPose, queue_size=1)
-    gestStrPub = rospy.Publisher('~myo_gest_str', String, queue_size=1)
-    posePub = rospy.Publisher('~pose', PoseStamped, queue_size=1)
+    imuPub = rospy.Publisher('myo_imu', Imu, queue_size=1)
+    oriPub = rospy.Publisher('myo_ori', Vector3, queue_size=1)
+    oriDegPub = rospy.Publisher('myo_ori_deg', Vector3, queue_size=1)
+    emgPub = rospy.Publisher('myo_emg', EmgArray, queue_size=1)
+    armPub = rospy.Publisher('myo_arm', MyoArm, queue_size=1, latch=True)
+    gestPub = rospy.Publisher('myo_gest', MyoPose, queue_size=1)
+    gestStrPub = rospy.Publisher('myo_gest_str', String, queue_size=1)
+    posePub = rospy.Publisher('pose', PoseStamped, queue_size=1)
 
     # Package the EMG data into an EmgArray
     def proc_emg(emg, moving):
