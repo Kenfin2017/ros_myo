@@ -1,0 +1,7 @@
+<launch>
+
+  <node pkg="ros_myo" name="turtle_msgs" type="imuTurtle.py"/>
+
+  <node pkg="turtlesim" name="turtlesimB" type="turtlesim_node"/>
+
+</launch>
