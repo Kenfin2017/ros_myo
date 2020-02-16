@@ -7,19 +7,19 @@ import rospy, math
 from std_msgs.msg import UInt8, String
 from sensor_msgs.msg import Imu
 from geometry_msgs.msg import Twist, Vector3
-from ros_myo.msg import EmgArray
+from ros_myo.msg import EmgArray, MyoPose
 
 if __name__ == '__main__':
 	global movingState
-	global zero
 	global y
+	global x
 	global K
-	global speed
-	speed = 0
-	K = 1
+	global angular_speed
+
+	angular_speed = 0
 	movingState = 0
-	zero = 0
 	y = 0
+	x = 0
 	rospy.init_node('turtlesim_driver', anonymous=True)
 
 	# Publish to the turtlesim movement topic
@@ -29,40 +29,43 @@ if __name__ == '__main__':
 	# Use the calibrated Myo gestures to drive the turtle
 	def drive(gest):
 		global movingState
-		global zero
-		global speed
-		if gest.data == 1: #FIST
-			movingState -= 1
-		elif gest.data == 4 or gest.data == 2: #FINGERS_SPREAD
-			movingState += 1
-		elif gest.data == 3 :
-			zero = y
+		#global speed
+		if gest.pose == 1: #REST
+			movingState = 0
+		elif gest.pose == 2: #FIST
+			movingState = -0.2
+		elif gest.pose == 5 : #FINGERS_SPREAD
+			movingState = 0.2
 
 		if movingState > 0 :
-			movingState = 1
 			turtlesimPub.publish("go forward")
-			speed = 1
-#			tsPub.publish(Twist(Vector3(1.0, 0, 0), Vector3(0, 0, 0)))
 		elif movingState < 0 :
-			movingState = -1
 			turtlesimPub.publish("go back")
-			speed = -1
-#			tsPub.publish(Twist(Vector3(-1.0, 0, 0), Vector3(0, 0, 0)))
-		else :
-			speed = 0
-		print (speed)
+		else:
+			turtlesimPub.publish("stop")
+		tsPub.publish(Twist(Vector3(movingState, 0, 0), Vector3(0, 0, 0)))
+
 
 	def turn(imuRead):
-		global zero
 		global y
+		global x
 		global K
-		global speed
-		y = imuRead.orientation.y
-		if (imuRead.orientation.y>zero):
-			tsPub.publish(Twist(Vector3(speed,0,0),Vector3(0,0,K*(imuRead.orientation.y-zero))))
-		if (imuRead.orientation.y<zero):
-			tsPub.publish(Twist(Vector3(speed,0,0),Vector3(0,0,-K*(zero-imuRead.orientation.y))))
-		#print (y)
+		global angular_speed
+		y = imuRead.linear_acceleration.y
+		x = imuRead.linear_acceleration.x
+		K = 2
+		# read acceleration when arm is raised
+		if x<0:
+			if y>0:
+				angular_speed = abs(x)
+				tsPub.publish(Twist(Vector3(0,0,0),Vector3(0,0,-K*angular_speed)))
+				turtlesimPub.publish("turn CW")
+			
+			if y<0:
+				angular_speed = abs(x)
+				tsPub.publish(Twist(Vector3(0,0,0),Vector3(0,0,K*angular_speed)))
+				turtlesimPub.publish("turn CCW")
+
 
 	def strength(emgArr1):
 		emgArr=emgArr1.data
@@ -86,7 +89,8 @@ if __name__ == '__main__':
 			tsPub.publish(Twist(Vector3(0,0,0),Vector3(0,0,0)))
 
 	rospy.Subscriber("myo_imu", Imu, turn)
-	rospy.Subscriber("myo_gest", UInt8, drive)
+	#rospy.Subscriber("myo_gest", MyoPose, drive)
+	rospy.Subscriber("myo_emg", EmgArray, strength)
 
 	# spin() simply keeps python from exiting until this node is stopped
 	rospy.spin()
