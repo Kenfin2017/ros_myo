@@ -60,7 +60,7 @@ if __name__ == '__main__':
         for emg_line in graph.graph('EMG values:', emg_data):
             print(emg_line)
 
-    emg_sub = rospy.Subscriber('/myo_raw/myo_emg',
+    emg_sub = rospy.Subscriber('/myo_emg',
                                EmgArray,
                                emg_cb,
                                queue_size=1)
