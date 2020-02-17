@@ -58,12 +58,12 @@ if __name__ == '__main__':
 		if x<0:
 			if y>0:
 				angular_speed = abs(x)
-				tsPub.publish(Twist(Vector3(0,0,0),Vector3(0,0,-K*angular_speed)))
+				tsPub.publish(Twist(Vector3(0,0,0),Vector3(0,0,K*angular_speed)))
 				turtlesimPub.publish("turn CW")
 			
 			if y<0:
 				angular_speed = abs(x)
-				tsPub.publish(Twist(Vector3(0,0,0),Vector3(0,0,K*angular_speed)))
+				tsPub.publish(Twist(Vector3(0,0,0),Vector3(0,0,-K*angular_speed)))
 				turtlesimPub.publish("turn CCW")
 
 
@@ -78,15 +78,15 @@ if __name__ == '__main__':
 		# If all muscles activated, drive forward exponentially
 		if ave > 500:
 			tsPub.publish(Twist(Vector3(0.1*math.exp(K*ave),0,0),Vector3(0,0,0)))
-		# If only left muscles activated, rotate proportionally
-		elif aveLeft > (aveRight + 200):
-			tsPub.publish(Twist(Vector3(0,0,0),Vector3(0,0,K*ave)))
-		# If only right muscles activated, rotate proportionally
-		elif aveRight > (aveLeft + 200):
-			tsPub.publish(Twist(Vector3(0,0,0),Vector3(0,0,-K*ave)))
-		# If not very activated, don't move (high-pass filter)
-		else:
-			tsPub.publish(Twist(Vector3(0,0,0),Vector3(0,0,0)))
+		# # If only left muscles activated, rotate proportionally
+		# elif aveLeft > (aveRight + 200):
+		# 	tsPub.publish(Twist(Vector3(0,0,0),Vector3(0,0,K*ave)))
+		# # If only right muscles activated, rotate proportionally
+		# elif aveRight > (aveLeft + 200):
+		# 	tsPub.publish(Twist(Vector3(0,0,0),Vector3(0,0,-K*ave)))
+		# # If not very activated, don't move (high-pass filter)
+		# else:
+		# 	tsPub.publish(Twist(Vector3(0,0,0),Vector3(0,0,0)))
 
 	rospy.Subscriber("myo_imu", Imu, turn)
 	#rospy.Subscriber("myo_gest", MyoPose, drive)
